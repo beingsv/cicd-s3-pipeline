@@ -36,12 +36,7 @@ jobs:
         run: echo "seclected action=> ${{ github.event.inputs.action }}"
 
       - name: Apply or Destroy
-        run: |
-          cd ./terraform/modules/child_module
-
-      - name: Initialize Terraform
-        run: terraform init
-      
+        run: 
           if [ "${{ github.event.inputs.action }}" == "apply" ]; then
             terraform apply -auto-approve
           elif [ "${{ github.event.inputs.action }}" == "destroy" ]; then
