@@ -37,8 +37,11 @@ jobs:
 
       - name: Apply or Destroy
         run: |
-          cd path/to/terraform/configuration # Change to the directory where your Terraform configuration is located
+          cd ./terraform/modules/child_module
 
+      - name: Initialize Terraform
+        run: terraform init
+      
           if [ "${{ github.event.inputs.action }}" == "apply" ]; then
             terraform apply -auto-approve
           elif [ "${{ github.event.inputs.action }}" == "destroy" ]; then
