@@ -1,44 +1,45 @@
-name: Terraform Apply or Destroy
+name: Terraform Workflow
 
 on:
   workflow_dispatch:
     inputs:
       action:
-        description: 'Terraform action to perform'
+        description: 'Action to perform'
         required: true
         default: 'apply'
         options:
-          - apply
-          - destroy
+          - 'apply'
+          - 'destroy'
 
 jobs:
   terraform:
     runs-on: ubuntu-latest
-    env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        AWS_SESSION_TOKEN: ${{ secrets.AWS_SESSION_TOKEN }}  # Fix the missing space here
-        AWS_REGION: 'us-east-1'
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
+    - name: Check out code
+      uses: actions/checkout@v2
 
-      - name: Set up Terraform
-        uses: hashicorp/setup-terraform@v1
-        with:
-          terraform_version: 1.0.6
+    - name: Set up Terraform
+      uses: hashicorp/setup-terraform@v1
+      
 
-      - name: Initialize Terraform
-        run: terraform init
+    - name: Initialize Terraform
+      run: terraform init
 
-      - name: Select action
-        run: echo "selected action=> ${{ github.event.inputs.action }}"
+    - name: Save Terraform state file
+      run: mv terraform.tfstate tfstate_backup/terraform.tfstate
+      if: ${{ github.event.inputs.action == 'apply' }}
 
-      - name: Apply or Destroy
-        run: |
-          if [ "${{ github.event.inputs.action }}" == "apply" ]; then
-            terraform apply -auto-approve
-          elif [ "${{ github.event.inputs.action }}" == "destroy" ]; then
-            terraform destroy -auto-approve
-          fi
+    - name: Terraform ${{ github.event.inputs.action }}
+      run: |
+        if [[ "${{ github.event.inputs.action }}" == "apply" ]]; then
+          terraform apply -auto-approve
+        elif [[ "${{ github.event.inputs.action }}" == "destroy" ]]; then
+          terraform init
+          mv tfstate_backup/terraform.tfstate terraform.tfstate
+          terraform destroy -auto-approve
+        fi
+
+    # - name: Cleanup
+    #   run: rm -rf .terraform
+
